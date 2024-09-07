@@ -1,7 +1,7 @@
 const express = require('express')
 const multer = require('multer')
-const path = require('path')
-const fs = require('fs')
+// const path = require('path')
+// const fs = require('fs')
 const router = express.Router()
 const connectToDatabase = require('../models/db')
 const logger = require('../logger')
@@ -19,7 +19,7 @@ const storage = multer.diskStorage({
   },
 })
 
-const upload = multer({ storage: storage })
+const upload = multer({ storage })
 
 // Get all secondChanceItems
 router.get('/', async (req, res, next) => {
@@ -45,8 +45,7 @@ router.post('/', upload.single('file'), async (req, res, next) => {
     await lastItemQuery.forEach((item) => {
       secondChanceItem.id = (parseInt(item.id) + 1).toString()
     })
-    const date_added = Math.floor(new Date().getTime() / 1000)
-    secondChanceItem.date_added = date_added
+    secondChanceItem.date_added = Math.floor(new Date().getTime() / 1000)
     secondChanceItem = await collection.insertOne(secondChanceItem)
     res.status(201).json(secondChanceItem.ops[0])
   } catch (e) {
@@ -59,7 +58,8 @@ router.get('/:id', async (req, res, next) => {
   try {
     const db = await connectToDatabase()
     const collection = db.collection('secondChanceItems')
-    const secondChanceItem = await collection.findOne({ id: id })
+    const id = req.params.id
+    const secondChanceItem = await collection.findOne({ id })
     if (!secondChanceItem) {
       return res.status(404).send('secondChanceItem not found')
     }
@@ -75,6 +75,7 @@ router.put('/:id', async (req, res, next) => {
   try {
     const db = await connectToDatabase()
     const collection = db.collection('secondChanceItems')
+    const id = req.params.id
     const secondChanceItem = await collection.findOne({ id })
 
     if (!secondChanceItem) {
@@ -110,6 +111,7 @@ router.delete('/:id', async (req, res, next) => {
   try {
     const db = await connectToDatabase()
     const collection = db.collection('secondChanceItems')
+    const id = req.params.id
     const secondChanceItem = await collection.findOne({ id })
 
     if (!secondChanceItem) {
