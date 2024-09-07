@@ -6,8 +6,8 @@ const router = express.Router()
 const dotenv = require('dotenv')
 const pino = require('pino') // Import Pino logger
 
-//Task 1: Use the `body`,`validationResult` from `express-validator` for input validation
-const { body, validationResult } = require('express-validator')
+// Task 1: Use the `body`,`validationResult` from `express-validator` for input validation
+const { validationResult } = require('express-validator')
 
 const logger = pino() // Create a Pino logger instance
 
@@ -16,7 +16,7 @@ const JWT_SECRET = process.env.JWT_SECRET
 
 router.post('/register', async (req, res) => {
   try {
-    //Connect to `secondChance` in MongoDB through `connectToDatabase` in `db.js`.
+    // Connect to `secondChance` in MongoDB through `connectToDatabase` in `db.js`.
     const db = await connectToDatabase()
     const collection = db.collection('users')
     const existingEmail = await collection.findOne({ email: req.body.email })
@@ -35,13 +35,13 @@ router.post('/register', async (req, res) => {
       firstName: req.body.firstName,
       lastName: req.body.lastName,
       password: hash,
-      createdAt: new Date(),
+      createdAt: new Date()
     })
 
     const payload = {
       user: {
-        id: newUser.insertedId,
-      },
+        id: newUser.insertedId
+      }
     }
 
     const authtoken = jwt.sign(payload, JWT_SECRET)
@@ -63,15 +63,15 @@ router.post('/login', async (req, res) => {
     const theUser = await collection.findOne({ email: req.body.email })
 
     if (theUser) {
-      let result = await bcryptjs.compare(req.body.password, theUser.password)
+      const result = await bcryptjs.compare(req.body.password, theUser.password)
       if (!result) {
         logger.error('Passwords do not match')
         return res.status(404).json({ error: 'Wrong pasword' })
       }
-      let payload = {
+      const payload = {
         user: {
-          id: theUser._id.toString(),
-        },
+          id: theUser._id.toString()
+        }
       }
 
       const userName = theUser.firstName
@@ -114,11 +114,11 @@ router.put('/update', async (req, res) => {
         .json({ error: 'Email not found in the request headers' })
     }
 
-    //Task 4: Connect to MongoDB
+    // Task 4: Connect to MongoDB
     const db = await connectToDatabase()
     const collection = db.collection('users')
 
-    //Task 5: Find user credentials
+    // Task 5: Find user credentials
     const existingUser = await collection.findOne({ email })
 
     if (!existingUser) {
@@ -129,18 +129,18 @@ router.put('/update', async (req, res) => {
     existingUser.firstName = req.body.name
     existingUser.updatedAt = new Date()
 
-    //Task 6: Update user credentials in DB
+    // Task 6: Update user credentials in DB
     const updatedUser = await collection.findOneAndUpdate(
       { email },
       { $set: existingUser },
       { returnDocument: 'after' }
     )
 
-    //Task 7: Create JWT authentication with user._id as payload using secret key from .env file
+    // Task 7: Create JWT authentication with user._id as payload using secret key from .env file
     const payload = {
       user: {
-        id: updatedUser._id.toString(),
-      },
+        id: updatedUser._id.toString()
+      }
     }
 
     const authtoken = jwt.sign(payload, JWT_SECRET)
